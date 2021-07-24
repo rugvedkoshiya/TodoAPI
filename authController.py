@@ -1,6 +1,5 @@
 from flask import Blueprint, request, Response
 from config import Config
-
 # importing setting as per enviroment
 if Config.DEBUG == True:
     from config import TestingConfig as SETTING
@@ -13,15 +12,49 @@ import hashlib
 from app import db
 from models import User
 import re, json
-from string_handler import SuccessStringHandler, ErrorStringHandler, ServerErrorStringHandler
+from stringHandler import SuccessStringHandler, ErrorStringHandler, ServerErrorStringHandler
+from jwtToken import jwtEncodeFunc, jwtDecodeFunc
 
 # email REGEX
 EMAIL_REGEX = re.compile(r"[\da-zA-Z](?:[\da-zA-Z]+[-.!$%&'*+/=?^_`{|}~]?[\da-zA-Z]+)*@[\da-zA-Z](?:[\da-zA-Z]*[-.]?[\da-zA-Z]+)*\.[\da-zA-Z]+")
 
+
+
+
 # auth controllers
 @authController.route('/login', methods=['POST'])
 def loginFunc():
-    return "loginFunc"
+    try:
+        if "id" in request.form and "password" in request.form:
+            id = request.form["id"]
+            password = hashlib.sha256(request.form["password"].encode()).hexdigest()
+
+            # check user is registered or not
+            if db.session.query(User).filter(User.id == id).count() != 0:
+
+                # check password
+                if db.session.query(User).filter(User.id == id, User.password == password).count() != 0:
+                    print("authenticated")
+                    userDataObj = db.session.query(User).get(id)
+                    return jwtEncodeFunc(userDataObj = userDataObj)
+                else:
+                    response = Response(json.dumps(ErrorStringHandler.WRONG_PASSWORD), status=401, mimetype='application/json')
+            else:
+                response = Response(json.dumps(ErrorStringHandler.USER_NOT_REGISTERED), status=404, mimetype='application/json')
+        else:
+            response = Response(json.dumps(ErrorStringHandler.BAD_REQUEST), status=400, mimetype='application/json')
+        
+        # sending response
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+    except Exception as e:
+        print(e)
+        response = Response(json.dumps(ServerErrorStringHandler.INTERNAL_SERVER_ERROR), status=500, mimetype='application/json')
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+
+
+
 
 @authController.route('/signup', methods=['POST'])
 def signupFunc():

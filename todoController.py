@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, Response, redirect
 import json
+from jwtToken import jwtDecodeFunc
 
 todoController = Blueprint('todo', __name__)
 
@@ -65,4 +66,4 @@ def todosFunc():
         response = createTodo()
     
     response.headers['Access-Control-Allow-Origin'] = '*'
-    return response
+    return "response"

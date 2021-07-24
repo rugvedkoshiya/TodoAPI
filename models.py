@@ -18,3 +18,12 @@ class User(db.Model):
         self.password = password
         self.isactive = isactive
         self.isadmin = isadmin
+
+class UserTodo(db.Model):
+    __tablename__ = 'usertodo'
+    id = db.Column(db.String(64), primary_key=True)
+    todos = db.Column(db.ARRAY(db.TEXT), nullable=True)
+
+    def __init__(self, id, todos):
+        self.id = id
+        self.todos = todos

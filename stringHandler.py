@@ -1,6 +1,8 @@
 class ErrorStringHandler():
     INVALID_EMAIL = {"success": False, "status_message": "Invalid email"}
     BAD_REQUEST = {"success": False, "status_message": "Bad request"}
+    WRONG_PASSWORD = {"success": False, "status_message": "Wrong password"}
+    USER_NOT_REGISTERED = {"success": False, "status_message": "User not registered"}
 
 class SuccessStringHandler():
     REGISTRATION_SUCCESS = {"success": True, "status_message": "Successfully registerd"}
