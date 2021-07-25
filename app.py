@@ -1,6 +1,4 @@
 from flask import Flask, jsonify, request, Response, redirect
-from authController import authController
-from todoController import todoController
 from flask_sqlalchemy import SQLAlchemy
 import uuid, base64, json
 from config import Config
@@ -19,11 +17,15 @@ app.secret_key = SETTING.SECRET_KEY
 app.config["SQLALCHEMY_DATABASE_URI"] = SETTING.DATABASE_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+db = SQLAlchemy(app)
+
+from authController import authController
+from todoController import todoController
+
 # register bluprint of controllers
 app.register_blueprint(authController, url_prefix='/auth')
 app.register_blueprint(todoController, url_prefix='/todo')
 
-db = SQLAlchemy(app)
 
 # started server
 if __name__ == "__main__":

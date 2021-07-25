@@ -10,15 +10,13 @@ authController = Blueprint('auth', __name__)
 
 import hashlib
 from app import db
-from models import User
+from models import User, UserTodo
 import re, json
 from stringHandler import SuccessStringHandler, ErrorStringHandler, ServerErrorStringHandler
 from jwtToken import jwtEncodeFunc, jwtDecodeFunc
 
 # email REGEX
 EMAIL_REGEX = re.compile(r"[\da-zA-Z](?:[\da-zA-Z]+[-.!$%&'*+/=?^_`{|}~]?[\da-zA-Z]+)*@[\da-zA-Z](?:[\da-zA-Z]*[-.]?[\da-zA-Z]+)*\.[\da-zA-Z]+")
-
-
 
 
 # auth controllers
@@ -34,9 +32,16 @@ def loginFunc():
 
                 # check password
                 if db.session.query(User).filter(User.id == id, User.password == password).count() != 0:
-                    print("authenticated")
                     userDataObj = db.session.query(User).get(id)
-                    return jwtEncodeFunc(userDataObj = userDataObj)
+                    jwtToken = jwtEncodeFunc(userDataObj = userDataObj)
+                    if jwtToken != 1:
+                        formattedData = {
+                            "username" : id,
+                            "token" : jwtToken
+                        }
+                        response = Response(json.dumps(formattedData), status=200, mimetype='application/json')
+                    else:
+                        response = Response(json.dumps(ServerErrorStringHandler.INTERNAL_SERVER_ERROR), status=500, mimetype='application/json')
                 else:
                     response = Response(json.dumps(ErrorStringHandler.WRONG_PASSWORD), status=401, mimetype='application/json')
             else:
@@ -48,7 +53,8 @@ def loginFunc():
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response
     except Exception as e:
-        print(e)
+        if SETTING.DEBUG:
+            print(e)
         response = Response(json.dumps(ServerErrorStringHandler.INTERNAL_SERVER_ERROR), status=500, mimetype='application/json')
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response
@@ -84,6 +90,12 @@ def signupFunc():
                         user = User(id=id, fname=fname, lname=lname, email=email, password=password, isactive=0, isadmin=isadmin)
                         db.session.add(user)
                         db.session.commit()
+
+                        # add user todo entry
+                        userData = UserTodo(id=id, todos=[])
+                        db.session.add(userData)
+                        db.session.commit()
+                        
                         response = Response(json.dumps(SuccessStringHandler.REGISTRATION_SUCCESS), status=201, mimetype='application/json')
                     else:
                         # email is already registerd
@@ -104,7 +116,8 @@ def signupFunc():
     
     # error handler
     except Exception as e:
-        print(e)
+        if SETTING.DEBUG:
+            print(e)
         response = Response(json.dumps(ServerErrorStringHandler.INTERNAL_SERVER_ERROR), status=500, mimetype='application/json')
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response

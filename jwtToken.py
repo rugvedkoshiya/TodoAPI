@@ -28,7 +28,7 @@ def jwtEncodeFunc(userDataObj):
             algorithm='HS256'
         )
     except Exception as e:
-        return e
+        return 1
 
 
 # jwt decode function
